@@ -3,7 +3,6 @@ import csv
 import json
 import sys
 import tomllib
-from io import StringIO
 from pathlib import Path
 
 from plexapi.server import PlexServer
@@ -53,8 +52,7 @@ def gather_library_overview(plex: PlexServer, types: set[str] | None = None) -> 
 
         if section.type == "movie":
             lib["movies"] = [
-                {"title": movie.title, "year": movie.year}
-                for movie in section.all()
+                {"title": movie.title, "year": movie.year} for movie in section.all()
             ]
 
         elif section.type == "show":
@@ -100,22 +98,27 @@ def output_csv(data: dict) -> None:
                 writer.writerow([movie["title"], movie.get("year", "")])
 
         elif lib["type"] == "show":
-            writer.writerow(["show", "year", "season", "episode_number", "episode_title"])
+            writer.writerow(
+                ["show", "year", "season", "episode_number", "episode_title"]
+            )
             for show in lib.get("shows", []):
                 for season in show.get("seasons", []):
                     for ep in season.get("episodes", []):
-                        writer.writerow([
-                            show["title"],
-                            show.get("year", ""),
-                            season["title"],
-                            ep.get("episode", ""),
-                            ep["title"],
-                        ])
-
+                        writer.writerow(
+                            [
+                                show["title"],
+                                show.get("year", ""),
+                                season["title"],
+                                ep.get("episode", ""),
+                                ep["title"],
+                            ]
+                        )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Export statistics from your Plex library.")
+    parser = argparse.ArgumentParser(
+        description="Export statistics from your Plex library."
+    )
     parser.add_argument(
         "--config",
         type=Path,
