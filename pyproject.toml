@@ -7,5 +7,8 @@ dependencies = [
     "plexapi>=4.18.0",
 ]
 
+[tool.uv]
+package = true
+
 [project.scripts]
-plexport = "main:main"
+plexport = "plexport.__main__:main"

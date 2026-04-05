@@ -30,7 +30,7 @@ To find your Plex token: open Plex Web, browse to any item, click the `...` menu
 ## Usage
 
 ```bash
-uv run main.py [--format json|csv] [--type movies] [--type shows] [--config FILE]
+uv run plexport [--format json|csv] [--type movies] [--type shows] [--config FILE]
 ```
 
 ### Options
@@ -45,14 +45,20 @@ uv run main.py [--format json|csv] [--type movies] [--type shows] [--config FILE
 
 ```bash
 # Export everything as JSON
-uv run main.py
+uv run plexport
 
 # Export only movies as CSV
-uv run main.py --type movies --format csv
+uv run plexport --type movies --format csv
 
 # Export movies and TV shows separately
-uv run main.py --type movies > movies.json
-uv run main.py --type shows > shows.json
+uv run plexport --type movies > movies.json
+uv run plexport --type shows > shows.json
+
+# Get all movie titles
+uv run plexport --type movies | jq '[.libraries[].movies[].title]'
+
+# Get all show titles
+uv run plexport --type shows | jq '[.libraries[].shows[].title]'
 ```
 
 ## Output
