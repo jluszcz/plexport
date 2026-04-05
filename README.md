@@ -55,10 +55,10 @@ uv run plexport --type movies > movies.json
 uv run plexport --type shows > shows.json
 
 # Get all movie titles
-uv run plexport --type movies | jq '[.libraries[].movies[].title]'
+uv run plexport --type movies | jq '.libraries[].movies[].title'
 
 # Get all show titles
-uv run plexport --type shows | jq '[.libraries[].shows[].title]'
+uv run plexport --type shows | jq '.libraries[].shows[].title'
 ```
 
 ## Output
