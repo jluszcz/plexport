@@ -13,9 +13,16 @@ dev = [
     "pytest>=8",
 ]
 
+[tool.ruff]
+# The extensionless script isn't matched by ruff's default *.py include.
+include = ["*.py", "*.pyi", "**/pyproject.toml", "plexport"]
+
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+[tool.ruff.lint.isort]
+# Not detectable as first-party without the .py extension.
+known-first-party = ["plexport"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]

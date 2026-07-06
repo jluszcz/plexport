@@ -19,10 +19,10 @@ To find your Plex token: open Plex Web, browse to any item, click the `...` menu
 
 ## Usage
 
-`plexport.py` is a self-contained [uv script](https://docs.astral.sh/uv/guides/scripts/) — no install step needed:
+`plexport` is a self-contained [uv script](https://docs.astral.sh/uv/guides/scripts/) — no install step needed:
 
 ```bash
-./plexport.py [--format json|csv] [--type movies] [--type shows]
+./plexport [--format json|csv] [--type movies] [--type shows]
 ```
 
 ### Options
@@ -38,20 +38,20 @@ Progress is reported on stderr, so it never mixes with redirected output. Librar
 
 ```bash
 # Export everything as JSON
-./plexport.py
+./plexport
 
 # Export only movies as CSV
-./plexport.py --type movies --format csv
+./plexport --type movies --format csv
 
 # Export movies and TV shows separately
-./plexport.py --type movies > movies.json
-./plexport.py --type shows > shows.json
+./plexport --type movies > movies.json
+./plexport --type shows > shows.json
 
 # Get all movie titles
-./plexport.py --type movies | jq '.libraries[].movies[].title'
+./plexport --type movies | jq '.libraries[].movies[].title'
 
 # Get all show titles
-./plexport.py --type shows | jq '.libraries[].shows[].title'
+./plexport --type shows | jq '.libraries[].shows[].title'
 ```
 
 ## Output
