@@ -1,0 +1,172 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "plexapi>=4.18.0",
+#     "requests>=2.32.0",
+# ]
+# ///
+import argparse
+import csv
+import json
+import os
+import sys
+
+import requests
+from plexapi.exceptions import PlexApiException
+from plexapi.server import PlexServer
+
+TYPE_CHOICES = {"movies": "movie", "shows": "show"}
+SUPPORTED_TYPES = set(TYPE_CHOICES.values())
+
+CSV_COLUMNS = ["library", "type", "title", "year", "season", "episode", "episode_title"]
+
+
+def resolve_server() -> tuple[str, str]:
+    url = os.environ.get("PLEX_URL")
+    token = os.environ.get("PLEX_TOKEN")
+
+    missing = [
+        name for name, value in (("PLEX_URL", url), ("PLEX_TOKEN", token)) if not value
+    ]
+    if missing:
+        print(
+            f"Missing environment variable(s): {', '.join(missing)}. "
+            "Set them in your shell or a .envrc, e.g.:\n\n"
+            'export PLEX_URL="http://<your-plex-server>:32400"\n'
+            'export PLEX_TOKEN="<your-plex-token>"',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    return url, token
+
+
+def gather_movies(section) -> list[dict]:
+    return [{"title": movie.title, "year": movie.year} for movie in section.all()]
+
+
+def gather_shows(section) -> list[dict]:
+    shows = []
+    for show in section.all():
+        # show.episodes() fetches all episodes in one request, unlike
+        # iterating seasons which costs one request per season.
+        seasons: dict = {}
+        for episode in show.episodes():
+            season = seasons.setdefault(
+                episode.parentIndex, {"title": episode.parentTitle, "episodes": []}
+            )
+            season["episodes"].append(
+                {"title": episode.title, "episode": episode.index}
+            )
+        shows.append(
+            {
+                "title": show.title,
+                "year": show.year,
+                "seasons": [
+                    seasons[index]
+                    for index in sorted(seasons, key=lambda i: (i is None, i))
+                ],
+            }
+        )
+    return shows
+
+
+def gather_library_overview(plex: PlexServer, types: set[str] | None = None) -> dict:
+    overview = {
+        "server_name": plex.friendlyName,
+        "version": plex.version,
+        "libraries": [],
+    }
+
+    for section in plex.library.sections():
+        if section.type not in SUPPORTED_TYPES:
+            print(
+                f"Skipping library '{section.title}': "
+                f"unsupported type '{section.type}'",
+                file=sys.stderr,
+            )
+            continue
+        if types and section.type not in types:
+            continue
+
+        print(f"Exporting library '{section.title}'...", file=sys.stderr)
+        lib = {"name": section.title, "type": section.type}
+        if section.type == "movie":
+            lib["movies"] = gather_movies(section)
+        else:
+            lib["shows"] = gather_shows(section)
+
+        overview["libraries"].append(lib)
+
+    return overview
+
+
+def output_json(data: dict) -> None:
+    print(json.dumps(data, indent=2))
+
+
+def output_csv(data: dict) -> None:
+    writer = csv.writer(sys.stdout)
+    writer.writerow(CSV_COLUMNS)
+
+    for lib in data["libraries"]:
+        for movie in lib.get("movies", []):
+            writer.writerow(
+                [lib["name"], lib["type"], movie["title"], movie["year"], "", "", ""]
+            )
+        for show in lib.get("shows", []):
+            for season in show["seasons"]:
+                for episode in season["episodes"]:
+                    writer.writerow(
+                        [
+                            lib["name"],
+                            lib["type"],
+                            show["title"],
+                            show["year"],
+                            season["title"],
+                            episode["episode"],
+                            episode["title"],
+                        ]
+                    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Export statistics from your Plex library."
+    )
+    parser.add_argument(
+        "--format",
+        choices=["json", "csv"],
+        default="json",
+        help="Output format (default: json)",
+    )
+    parser.add_argument(
+        "--type",
+        choices=sorted(TYPE_CHOICES),
+        dest="types",
+        action="append",
+        metavar="TYPE",
+        help="Filter by library type: movies, shows (can be specified multiple times)",
+    )
+    args = parser.parse_args()
+
+    url, token = resolve_server()
+
+    try:
+        plex = PlexServer(url, token)
+    except (requests.RequestException, PlexApiException) as e:
+        print(f"Failed to connect to Plex server at {url}: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    types = {TYPE_CHOICES[t] for t in args.types} if args.types else None
+    data = gather_library_overview(plex, types)
+
+    if args.format == "csv":
+        output_csv(data)
+    else:
+        output_json(data)
+
+
+if __name__ == "__main__":
+    main()

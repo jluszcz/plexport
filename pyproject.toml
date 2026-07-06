@@ -2,13 +2,27 @@
 name = "plexport"
 version = "0.1.0"
 description = "Export statistics from your Plex library"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
     "plexapi>=4.18.0",
+    "requests>=2.32.0",
 ]
 
-[tool.uv]
-package = true
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
 
-[project.scripts]
-plexport = "plexport.__main__:main"
+[tool.ruff]
+# The extensionless script isn't matched by ruff's default *.py include.
+include = ["*.py", "*.pyi", "**/pyproject.toml", "plexport"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+# Not detectable as first-party without the .py extension.
+known-first-party = ["plexport"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

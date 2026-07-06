@@ -4,33 +4,25 @@ Exports title information from a Plex media server to JSON or CSV.
 
 ## Requirements
 
-- Python 3.14+
-- [uv](https://docs.astral.sh/uv/)
+- [uv](https://docs.astral.sh/uv/) (installs Python 3.11+ and dependencies automatically)
 
 ## Setup
 
-### 1. Install dependencies
+Configuration is two environment variables — for example with [direnv](https://direnv.net/), create a gitignored `.envrc`:
 
 ```bash
-uv sync
-```
-
-### 2. Configure the server connection
-
-Create `plexport.toml` in the project directory (or `~/.config/plexport/config.toml`):
-
-```toml
-[server]
-url = "http://192.168.x.x:32400"
-token = "your-plex-token"
+export PLEX_URL=http://192.168.x.x:32400
+export PLEX_TOKEN=your-plex-token
 ```
 
 To find your Plex token: open Plex Web, browse to any item, click the `...` menu → Get Info → View XML. The token is the `X-Plex-Token` query parameter in the URL.
 
 ## Usage
 
+`plexport` is a self-contained [uv script](https://docs.astral.sh/uv/guides/scripts/) — no install step needed:
+
 ```bash
-uv run plexport [--format json|csv] [--type movies] [--type shows] [--config FILE]
+./plexport [--format json|csv] [--type movies] [--type shows]
 ```
 
 ### Options
@@ -39,26 +31,27 @@ uv run plexport [--format json|csv] [--type movies] [--type shows] [--config FIL
 |------|---------|-------------|
 | `--format` | `json` | Output format: `json` or `csv` |
 | `--type` | all | Filter by type: `movies` or `shows` (repeatable) |
-| `--config` | `plexport.toml` | Path to config file |
+
+Progress is reported on stderr, so it never mixes with redirected output. Library types other than movies and TV shows (music, photos) are skipped with a note.
 
 ### Examples
 
 ```bash
 # Export everything as JSON
-uv run plexport
+./plexport
 
 # Export only movies as CSV
-uv run plexport --type movies --format csv
+./plexport --type movies --format csv
 
 # Export movies and TV shows separately
-uv run plexport --type movies > movies.json
-uv run plexport --type shows > shows.json
+./plexport --type movies > movies.json
+./plexport --type shows > shows.json
 
 # Get all movie titles
-uv run plexport --type movies | jq '.libraries[].movies[].title'
+./plexport --type movies | jq '.libraries[].movies[].title'
 
 # Get all show titles
-uv run plexport --type shows | jq '.libraries[].shows[].title'
+./plexport --type shows | jq '.libraries[].shows[].title'
 ```
 
 ## Output
@@ -101,4 +94,18 @@ uv run plexport --type shows | jq '.libraries[].shows[].title'
 
 ### CSV
 
-Movies and TV shows are each rendered as a flat table. TV show episodes are one row each with show, season, and episode columns repeated.
+One flat table with a single header row, loadable directly into Excel or pandas. Movies leave the season/episode columns empty; each episode is one row.
+
+```csv
+library,type,title,year,season,episode,episode_title
+Movies,movie,Heat,1995,,,
+TV Shows,show,The Office,2005,Season 1,1,Pilot
+```
+
+## Development
+
+```bash
+uv sync                 # install dependencies (including pytest)
+uv run pytest           # run the tests
+uvx pre-commit install  # set up git hooks (ruff lint + format, misc checks)
+```

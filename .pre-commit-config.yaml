@@ -12,3 +12,16 @@ repos:
       - id: file-contents-sorter
         files: .gitignore
       - id: trailing-whitespace
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      # types_or/files overrides: the extensionless plexport script isn't
+      # detected as python, so match it (and .py files) by name instead.
+      - id: ruff-check
+        args:
+          - --fix
+        types_or: [file]
+        files: ^(.*\.py|plexport)$
+      - id: ruff-format
+        types_or: [file]
+        files: ^(.*\.py|plexport)$
