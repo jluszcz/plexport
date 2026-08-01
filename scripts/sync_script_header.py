@@ -12,11 +12,14 @@ header was rewritten, 2 on error.
 import re
 import sys
 import tomllib
+import traceback
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "plexport"
 PYPROJECT = REPO_ROOT / "pyproject.toml"
+
+REQUIRED_KEYS = ("requires-python", "dependencies")
 
 # PEP 723: a `# /// script` block of commented TOML, ended by `# ///`.
 BLOCK = re.compile(r"^# /// script$\n(?P<body>(^#(| .*)$\n)+)^# ///$", re.MULTILINE)
@@ -48,12 +51,19 @@ def render_block(project):
     )
 
 
-def main():
-    project = tomllib.loads(PYPROJECT.read_text())["project"]
-    text = SCRIPT.read_text()
+def main(pyproject=PYPROJECT, script=SCRIPT):
+    project = tomllib.loads(pyproject.read_text()).get("project", {})
+    missing = [key for key in REQUIRED_KEYS if key not in project]
+    if missing:
+        print(
+            f"{pyproject.name} has no [project] {' or '.join(missing)}",
+            file=sys.stderr,
+        )
+        return 2
 
+    text = script.read_text()
     if BLOCK.search(text) is None:
-        print(f"{SCRIPT.name} is missing its PEP 723 script block", file=sys.stderr)
+        print(f"{script.name} is missing its PEP 723 script block", file=sys.stderr)
         return 2
 
     # A lambda replacement keeps backslashes in version specifiers literal.
@@ -61,10 +71,16 @@ def main():
     if updated == text:
         return 0
 
-    SCRIPT.write_text(updated)
-    print(f"Rewrote {SCRIPT.name}'s script block from {PYPROJECT.name}")
+    script.write_text(updated)
+    print(f"Rewrote {script.name}'s script block from {pyproject.name}")
     return 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception:
+        # Exit 1 means "rewrote the header" to both callers, so an unhandled
+        # crash must not borrow it.
+        traceback.print_exc()
+        sys.exit(2)

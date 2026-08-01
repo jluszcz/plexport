@@ -14,14 +14,24 @@ on:
 permissions:
   contents: read
 
+# Serialize runs so two closely-spaced pushes can't race to push a commit.
+# Never cancel: a cancelled run would drop a sync that nothing re-triggers.
+concurrency:
+  group: sync-script-header
+  cancel-in-progress: false
+
 jobs:
   sync-script-header:
     runs-on: ubuntu-latest
     steps:
       # SYNC_HEADER_PAT, not GITHUB_TOKEN: pushes made with GITHUB_TOKEN don't
       # trigger workflow runs, so CI would never run on the synced commit.
+      #
+      # ref: main, not the default github.sha — a queued run would otherwise
+      # check out its own now-stale commit and push a non-fast-forward.
       - uses: actions/checkout@v7
         with:
+          ref: main
           token: ${{ secrets.SYNC_HEADER_PAT }}
 
       - name: Sync plexport's PEP 723 header
