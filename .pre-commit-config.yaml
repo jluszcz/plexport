@@ -12,15 +12,10 @@ repos:
       - id: file-contents-sorter
         files: .gitignore
       - id: trailing-whitespace
-  - repo: local
-    hooks:
-      # Dependabot only edits pyproject.toml, so the header is generated from it.
-      - id: sync-script-header
-        name: sync plexport's PEP 723 header from pyproject.toml
-        entry: uv run python scripts/sync_script_header.py
-        language: system
-        files: ^(pyproject\.toml|plexport)$
-        pass_filenames: false
+  # No sync-script-header hook here on purpose. CI runs `pre-commit run
+  # --all-files`, so any hook touching the PEP 723 header becomes a required
+  # check — and on a Dependabot PR the header is *expected* to be stale until
+  # the post-merge sync runs. Such a hook fails every Dependabot PR by design.
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.0
     hooks:
