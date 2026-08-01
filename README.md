@@ -111,4 +111,5 @@ uvx pre-commit install  # set up git hooks (ruff lint + format, misc checks)
 ```
 
 To change a dependency, edit `pyproject.toml` only. `plexport`'s PEP 723 header is generated from it by
-`scripts/sync_script_header.py`, which runs as a pre-commit hook and again on `main` after Dependabot's PRs merge.
+`scripts/sync_script_header.py`, which runs on `main` after the change merges. To update the header in your own
+commit instead, run `uv run python scripts/sync_script_header.py`.

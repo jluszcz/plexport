@@ -17,9 +17,14 @@ Do not commit if either command fails.
 it is a **separate declaration** from `pyproject.toml`. Dependabot only watches `pyproject.toml` and `uv.lock`, so
 the header is the copy that would silently go stale, and it is the one users execute.
 
-**Edit `pyproject.toml` only.** `scripts/sync_script_header.py` generates the header from it, driven by a pre-commit
-hook locally and by the `Sync Script Header` workflow on `main` after Dependabot's PRs merge.
+**Edit `pyproject.toml` only.** The `Sync Script Header` workflow regenerates the header on `main` via
+`scripts/sync_script_header.py` once the change merges. Run it by hand with
+`uv run python scripts/sync_script_header.py` if you want the header updated in your own commit.
 
-`tests/test_script_metadata.py` checks *compatibility*, not equality: dependency names must match, and the installed
-version must satisfy the header's specifier. Equality would make every Dependabot PR unmergeable and stall the
-post-merge sync that fixes it, so the header is allowed to trail `pyproject.toml` until that sync lands.
+A stale header on a PR is expected, not a defect — it stays stale until the post-merge sync lands. Nothing that
+runs in CI may reject that state, which is why:
+
+- `tests/test_script_metadata.py` checks *compatibility*, not equality: dependency names must match and the installed
+  version must satisfy the header's specifier.
+- there is **no pre-commit hook** for the sync. CI runs `pre-commit run --all-files`, so such a hook would be a
+  required check that fails every Dependabot PR.

@@ -1,7 +1,7 @@
 """The sync script's exit codes are a contract, not a detail.
 
-Both callers branch on them: the pre-commit hook reads non-zero as "the header
-moved", and the workflow maps 1 to "commit and push" but 2 to "fail the job".
+The Sync Script Header workflow branches on them: 0 and it stops, 1 and it
+commits and pushes the rewritten header, 2 and it fails the job.
 """
 
 import pytest
