@@ -2,11 +2,14 @@
 
 Dependabot only watches pyproject.toml and uv.lock, so the header — the copy
 users actually execute via `uv run ./plexport` — is generated rather than
-hand-maintained. A pre-commit hook runs this locally; the Sync Script Header
-workflow runs it on main after Dependabot's PRs merge.
+hand-maintained. The Sync Script Header workflow runs this on main once a
+dependency change merges. Run it by hand to update the header sooner.
 
-Exit codes follow the pre-commit convention: 0 when already in sync, 1 when the
-header was rewritten, 2 on error.
+Deliberately not a pre-commit hook: CI runs `pre-commit run --all-files`, so it
+would become a required check, and on a Dependabot PR the header is *expected*
+to be stale until the post-merge sync lands.
+
+Exit codes: 0 when already in sync, 1 when the header was rewritten, 2 on error.
 """
 
 import re
