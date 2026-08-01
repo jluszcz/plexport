@@ -83,7 +83,7 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception:
-        # Exit 1 means "rewrote the header" to both callers, so an unhandled
-        # crash must not borrow it.
+        # Exit 1 tells the workflow "rewrote the header, commit and push", so
+        # an unhandled crash must not borrow it.
         traceback.print_exc()
         sys.exit(2)
