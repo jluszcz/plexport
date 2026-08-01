@@ -1,0 +1,45 @@
+name: Sync Script Header
+
+# Dependabot only updates pyproject.toml and uv.lock, never plexport's PEP 723
+# header. Regenerate the header here, after its PR merges, so the copy users
+# execute via `uv run ./plexport` follows along automatically.
+#
+# The paths filter also prevents recursion: this job's own commit touches only
+# plexport, so it cannot re-trigger the workflow.
+on:
+  push:
+    branches: [main]
+    paths: [pyproject.toml]
+
+permissions:
+  contents: read
+
+jobs:
+  sync-script-header:
+    runs-on: ubuntu-latest
+    steps:
+      # SYNC_HEADER_PAT, not GITHUB_TOKEN: pushes made with GITHUB_TOKEN don't
+      # trigger workflow runs, so CI would never run on the synced commit.
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.SYNC_HEADER_PAT }}
+
+      - name: Sync plexport's PEP 723 header
+        id: sync
+        run: |
+          set +e
+          python3 scripts/sync_script_header.py
+          case $? in
+            0) echo "changed=false" >> "$GITHUB_OUTPUT" ;;
+            1) echo "changed=true" >> "$GITHUB_OUTPUT" ;;
+            *) exit 1 ;;
+          esac
+
+      - name: Commit synced header
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add plexport
+          git commit -m "chore: sync plexport's PEP 723 header with pyproject.toml"
+          git push
