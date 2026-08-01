@@ -15,7 +15,11 @@ Do not commit if either command fails.
 
 `plexport` is a PEP 723 single-file script — its `# /// script` header is what `uv run ./plexport` installs from, and
 it is a **separate declaration** from `pyproject.toml`. Dependabot only watches `pyproject.toml` and `uv.lock`, so
-the header is the copy that silently goes stale, and it is the one users execute.
+the header is the copy that would silently go stale, and it is the one users execute.
 
-Change a dependency in both places. `tests/test_script_metadata.py` asserts they agree, so forgetting fails the build
-rather than shipping a script that installs a version nobody tested.
+**Edit `pyproject.toml` only.** `scripts/sync_script_header.py` generates the header from it, driven by a pre-commit
+hook locally and by the `Sync Script Header` workflow on `main` after Dependabot's PRs merge.
+
+`tests/test_script_metadata.py` checks *compatibility*, not equality: dependency names must match, and the installed
+version must satisfy the header's specifier. Equality would make every Dependabot PR unmergeable and stall the
+post-merge sync that fixes it, so the header is allowed to trail `pyproject.toml` until that sync lands.

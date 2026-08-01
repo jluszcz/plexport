@@ -109,3 +109,6 @@ uv sync                 # install dependencies (including pytest)
 uv run pytest           # run the tests
 uvx pre-commit install  # set up git hooks (ruff lint + format, misc checks)
 ```
+
+To change a dependency, edit `pyproject.toml` only. `plexport`'s PEP 723 header is generated from it by
+`scripts/sync_script_header.py`, which runs as a pre-commit hook and again on `main` after Dependabot's PRs merge.

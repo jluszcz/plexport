@@ -12,6 +12,15 @@ repos:
       - id: file-contents-sorter
         files: .gitignore
       - id: trailing-whitespace
+  - repo: local
+    hooks:
+      # Dependabot only edits pyproject.toml, so the header is generated from it.
+      - id: sync-script-header
+        name: sync plexport's PEP 723 header from pyproject.toml
+        entry: uv run python scripts/sync_script_header.py
+        language: system
+        files: ^(pyproject\.toml|plexport)$
+        pass_filenames: false
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.0
     hooks:
