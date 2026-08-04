@@ -11,4 +11,4 @@ permissions:
 
 jobs:
   ci:
-    uses: jluszcz/github-utils/.github/workflows/python-ci.yml@v1
+    uses: jluszcz/github-utils/.github/workflows/python-ci.yml@v2
