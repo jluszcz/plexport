@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-merge-conflict
       - id: check-toml
@@ -17,7 +17,7 @@ repos:
   # check — and on a Dependabot PR the header is *expected* to be stale until
   # the post-merge sync runs. Such a hook fails every Dependabot PR by design.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.0
+    rev: v0.16.10
     hooks:
       # types_or/files overrides: the extensionless plexport script isn't
       # detected as python, so match it (and .py files) by name instead.
