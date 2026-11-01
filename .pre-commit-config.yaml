@@ -17,7 +17,7 @@ repos:
   # check — and on a Dependabot PR the header is *expected* to be stale until
   # the post-merge sync runs. Such a hook fails every Dependabot PR by design.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.10
+    rev: v0.17.3
     hooks:
       # types_or/files overrides: the extensionless plexport script isn't
       # detected as python, so match it (and .py files) by name instead.
